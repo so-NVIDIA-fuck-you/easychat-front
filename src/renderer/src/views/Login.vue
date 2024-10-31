@@ -4,20 +4,33 @@
         <div class="title drag">EasyChat</div>
 
         <div class="login-form">
-            <div class="error-msg"></div>
-            <el-form :model="formData" :rule="rules" ref="formDataRef" label-width="0px" @submit.prevent>
+            <!-- <div class="error-msg">{{ errorMsg }}</div> -->
+            <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="0px" @submit.prevent>
                 <!-- 输入框 -->
                 <el-form-item prop="email">
-                    <el-input size="large" clearable placeholder="请输入邮箱" v-model.trim="formData.email" style="width: 90%">
+                    <el-input size="large" clearable placeholder="请输入邮箱" v-model.trim="formData.email"
+                        style="width: 90%">
                         <template #prefix>
                             <span class="iconfont icon-email"></span>
 
                         </template>
                     </el-input>
                 </el-form-item>
-                
+
+
+                <el-form-item prop="nickName" v-if="!isLogin">
+                    <el-input size="large" show-password clearable placeholder="请输入昵称" v-model.trim="formData.nickName"
+                        style="width: 90%">
+                        <template #prefix>
+                            <span class="iconfont icon-user-nick"></span>
+
+                        </template>
+                    </el-input>
+                </el-form-item>
+
                 <el-form-item prop="password">
-                    <el-input size="large" show-password clearable placeholder="请输入密码" v-model.trim="formData.password" style="width: 90%">
+                    <el-input size="large" show-password clearable placeholder="请输入密码" v-model.trim="formData.password"
+                        style="width: 90%">
                         <template #prefix>
                             <span class="iconfont icon-password"></span>
 
@@ -25,22 +38,33 @@
                     </el-input>
                 </el-form-item>
 
-                <el-form-item prop="checkcode">
-                    <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData.checkCode" style="width: 90%">
+                <el-form-item prop="rePassword" v-if="!isLogin">
+                    <el-input size="large" show-password clearable placeholder="请再次输入密码"
+                        v-model.trim="formData.rePassword" style="width: 90%">
                         <template #prefix>
-                            <span class="iconfont icon-checkcode"></span>
+                            <span class="iconfont icon-password"></span>
 
                         </template>
                     </el-input>
                 </el-form-item>
-                
+
+                <el-form-item prop="checkCode">
+                    <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData.checkCode"
+                        style="width: 90%">
+                        <template #prefix>
+                            <span class="iconfont icon-checkcode"></span>
+                        </template>
+                        <img :src="checkCodeUrl" class="check-code" @click="changeCheckCode">
+                    </el-input>
+                </el-form-item>
+
                 <el-form-item>
-                    <el-button type="primary" class="login-btn" >登录</el-button>
+                    <el-button type="primary" class="login-btn" @click="submit">{{ isLogin ? '登录' : '注册' }}</el-button>
                 </el-form-item>
 
 
                 <div class="button-link">
-                      <span class="a-link">没有账号？</span>
+                    <span class="a-link" @click="changeOpType">{{ isLogin ? '没有账号？' : '已有账号？' }}</span>
                 </div>
 
             </el-form>
@@ -51,22 +75,84 @@
 </template>
 
 
-<script lang="ts" setup>
+<script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
-const { proxy } = getCurrentInstance();
+const { proxy } = getCurrentInstance()
 
-const formData= ref({})
-const formDataRef= ref()
-const rules={
-    title:[{require:true,message:'请输入内容'}]
+
+const formData = ref({
+    email: '',
+    password: '',
+    rePassword:'',
+    checkCode: ''
+
+})
+const formDataRef = ref()
+
+
+//获取验证码
+const checkCodeUrl=ref(null);
+const changeCheckCode=async()=>{
+    let result= await proxy.Request({
+       url:proxy.Api.checkCode
+    }) 
+    if(!result){
+        return;
+    }
+    checkCodeUrl.value=result.data.checkCode;
+    localStorage.setItem('checkCodeKey',result.data.CheckCodeKey)
 }
+
+changeCheckCode()
+
+
+const rePasswordRule = (rule, value, callback) => {
+    console.log(formData)
+  if (value === '') {
+    callback(new Error('输入不能为空'))
+  } else if (value !== formData.value.password) {
+    callback(new Error("两次密码不一致"))
+  } else {
+    callback()
+  }
+}
+
+const rules = {
+    email: [{ required: true, message: '请输入邮箱', trigger: 'blur' },
+    {type: 'email',message: '请输入有效的邮箱地址',trigger: ['blur']}
+    ],
+    password: [{ required: true, message: '请输入密码', trigger: 'blur' }
+        ,{min:6,max:14,message:'密码必须是6-14位',trigger:'blur'}
+    ],
+    checkCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }],
+    nickName:[{required: true, message: '请输入昵称', trigger: 'blur'}],
+    rePassword:[{validator:rePasswordRule,trigger: 'blur'}]
+}
+
+const isLogin = ref(true)
+const changeOpType = () => {
+    window.ipcRenderer.send('loginOrRegister', !isLogin.value)
+    isLogin.value = !isLogin.value
+}
+
+
+const submit = () => {
+    formDataRef.value.validate((valid) => {
+        if (valid) {
+            // 表单有效，执行后续操作
+            console.log('表单有效，提交:', formData.value);
+        } else {
+            console.error('表单校验失败');
+            return false;
+        }
+    });
+};
 
 </script>
 
 
 <style lang="scss" scoped>
-.el-input
-{
+.el-input {
     margin-left: 13px;
 }
 
@@ -80,14 +166,17 @@ const rules={
         padding: 5px 0px 0px 10px;
     }
 }
-.login-btn{
+
+.login-btn {
     margin-top: 20px;
-    width: 100%;
+    margin-left: 30px;
+    width: 80%;
     background: #07c160;
     height: 36px;
     font-size: 16px;
 }
-.button-link{
-  text-align: right;
+
+.button-link {
+    text-align: right;
 }
 </style>

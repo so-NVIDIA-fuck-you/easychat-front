@@ -1,11 +1,11 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow ,ipcMain} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
 const login_width=300;
-const login_height=570;
-const register_height=490;
+const login_height=470;
+const register_height=690;
 
 
 
@@ -26,12 +26,27 @@ function createWindow() {
     // ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation:false,
+      webSecurity: false
     }
+  })
+
+  ipcMain.on("loginOrRegister",(e,isLogin)=>{
+    console.log("主进程收到消息",isLogin);
+    mainWindow.setResizable(true);
+    if(isLogin){
+      mainWindow.setSize(login_width,login_height);
+    }
+    else{
+      mainWindow.setSize(login_width,register_height);
+    }
+    mainWindow.setResizable(false);
   })
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.setTitle("EasyChat")
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
