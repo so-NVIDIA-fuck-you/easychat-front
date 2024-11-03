@@ -52,10 +52,11 @@ instance.interceptors.response.use(
         loading.close()
        }
        const responseData=response.data;
+       console.log(responseData)
        if(responseType=="arraybuffer"||responseType=="blob"){
         return responseData;
        }
-     if(responseData.code==200)
+     if(responseData.code==1)
      {
         return responseData;
      }else if(responseData.code==901)
@@ -81,7 +82,7 @@ instance.interceptors.response.use(
 
 );
 
-export const Request=(config)=>{
+ const Request=(config)=>{
     const{url,params,dataType,showLoading=true,responseType=responseTypeJson,showError=true}=config;
     let contentType=contentTypeform;
     let formData=new FormData();
@@ -110,3 +111,5 @@ export const Request=(config)=>{
         return null
     });
 };
+
+export default Request;

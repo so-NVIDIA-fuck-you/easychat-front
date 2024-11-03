@@ -1,5 +1,6 @@
 <template>
 
+
     <div class="login-panel">
         <div class="title drag">EasyChat</div>
 
@@ -49,13 +50,18 @@
                 </el-form-item>
 
                 <el-form-item prop="checkCode">
+                    <div class="check-code-panel">
+
                     <el-input size="large" clearable placeholder="请输入验证码" v-model.trim="formData.checkCode"
-                        style="width: 90%">
+                        style="width: 60%">
                         <template #prefix>
                             <span class="iconfont icon-checkcode"></span>
                         </template>
-                        <img :src="checkCodeUrl" class="check-code" @click="changeCheckCode">
+                        
                     </el-input>
+                    <img :src="checkCodeUrl" class="check-code" @click="changeCheckCode"/>
+
+                    </div>
                 </el-form-item>
 
                 <el-form-item>
@@ -77,6 +83,8 @@
 
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
+import md5 from 'js-md5';
+import { response } from 'express';
 const { proxy } = getCurrentInstance()
 
 
@@ -84,7 +92,8 @@ const formData = ref({
     email: '',
     password: '',
     rePassword:'',
-    checkCode: ''
+    checkCode: '',
+    nickName: ''
 
 })
 const formDataRef = ref()
@@ -97,13 +106,15 @@ const changeCheckCode=async()=>{
        url:proxy.Api.checkCode
     }) 
     if(!result){
-        return;
+        return 0;
     }
     checkCodeUrl.value=result.data.checkCode;
-    localStorage.setItem('checkCodeKey',result.data.CheckCodeKey)
+    localStorage.setItem('checkCodeKey',result.data.CheckCodeKey);
 }
-
 changeCheckCode()
+
+console.log(checkCodeUrl.value)
+
 
 
 const rePasswordRule = (rule, value, callback) => {
@@ -130,13 +141,50 @@ const rules = {
 }
 
 const isLogin = ref(true)
+
 const changeOpType = () => {
     window.ipcRenderer.send('loginOrRegister', !isLogin.value)
     isLogin.value = !isLogin.value
 }
 
+const showLoading=ref(false)
+const submit = async() => {
 
-const submit = () => {
+   let result= await proxy.Request({
+    url: isLogin.value?proxy.Api.login:proxy.Api.register,
+    showLoading: isLogin.value?false:true,
+    showError:false,
+    params:{
+        email:formData.value.email,
+        password:isLogin.value?md5(formData.value.password):formData.value.password,
+        checkCode:formData.value.checkCode,
+        nickName: formData.value.nickName,
+        checkCodeKey: localStorage.getItem('checkCodeKey')
+    },
+    errorCallback:(response)=>{
+        showLoading.value=false
+        changeCheckCode()
+        errorMsg.value=response.info
+    }
+   })
+   if(!result)
+   {
+    return
+   }
+   if(isLogin.value)//登陆成功
+   {
+     
+
+
+
+
+
+   }else{
+     proxy.message,success('注册成功')
+     changeOpType()
+   }
+
+
     formDataRef.value.validate((valid) => {
         if (valid) {
             // 表单有效，执行后续操作
@@ -147,6 +195,10 @@ const submit = () => {
         }
     });
 };
+
+
+
+
 
 </script>
 

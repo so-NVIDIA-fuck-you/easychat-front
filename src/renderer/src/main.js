@@ -6,7 +6,7 @@ import 'element-plus/dist/index.css'
 import '@/assets/cust-elementplus.scss'
 import '@/assets/icon/iconfont.css'
 import '@/assets/base.scss'
-import {Request} from './utlis/Request'
+import Request from './utlis/Request'
 import message from './utlis/Message'
 import Api from './utlis/Api'
 
