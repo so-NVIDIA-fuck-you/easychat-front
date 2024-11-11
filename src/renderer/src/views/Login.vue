@@ -84,7 +84,10 @@
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
 import md5 from 'js-md5';
-import { response } from 'express';
+import { useUserInfoStore } from '../stores/UserInfoStore';
+import { useRouter } from 'vue-router';
+const router=useRouter()
+const UserInfoStore=useUserInfoStore()
 const { proxy } = getCurrentInstance()
 
 
@@ -109,11 +112,11 @@ const changeCheckCode=async()=>{
         return 0;
     }
     checkCodeUrl.value=result.data.checkCode;
-    localStorage.setItem('checkCodeKey',result.data.CheckCodeKey);
+    localStorage.setItem('checkCodeKey',result.data.checkCodeKey);
 }
 changeCheckCode()
 
-console.log(checkCodeUrl.value)
+console.log("获取验证码："+checkCodeUrl)
 
 
 
@@ -150,22 +153,24 @@ const changeOpType = () => {
 const showLoading=ref(false)
 const submit = async() => {
 
+   
    let result= await proxy.Request({
     url: isLogin.value?proxy.Api.login:proxy.Api.register,
     showLoading: isLogin.value?false:true,
     showError:false,
     params:{
+        checkCodeKey: localStorage.getItem('checkCodeKey'),
         email:formData.value.email,
-        password:isLogin.value?md5(formData.value.password):formData.value.password,
+        passWord:isLogin.value?formData.value.password:formData.value.password,
         checkCode:formData.value.checkCode,
-        nickName: formData.value.nickName,
-        checkCodeKey: localStorage.getItem('checkCodeKey')
+        nickName: formData.value.nickName
     },
     errorCallback:(response)=>{
         showLoading.value=false
         changeCheckCode()
         errorMsg.value=response.info
     }
+    
    })
    if(!result)
    {
@@ -173,28 +178,22 @@ const submit = async() => {
    }
    if(isLogin.value)//登陆成功
    {
+    //存储用户信息以及token
+     UserInfoStore.setInfo(result.data)
+     localStorage.setItem('token',result.data.token)
      
-
-
-
+     //页面跳转
+     router.push('/main')
 
 
    }else{
-     proxy.message,success('注册成功')
+     proxy.message.success('注册成功')
      changeOpType()
    }
 
 
-    formDataRef.value.validate((valid) => {
-        if (valid) {
-            // 表单有效，执行后续操作
-            console.log('表单有效，提交:', formData.value);
-        } else {
-            console.error('表单校验失败');
-            return false;
-        }
-    });
 };
+
 
 
 

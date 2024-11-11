@@ -9,6 +9,7 @@ import '@/assets/base.scss'
 import Request from './utlis/Request'
 import message from './utlis/Message'
 import Api from './utlis/Api'
+import * as Pinia from 'pinia'
 
 
 
@@ -17,6 +18,7 @@ import router from '@/router'
 const app=createApp(App)
 app.use(ElementPlus)
 app.use(router)
+app.use(Pinia.createPinia())
 
 app.config.globalProperties.Request=Request;
 app.config.globalProperties.message=message;
