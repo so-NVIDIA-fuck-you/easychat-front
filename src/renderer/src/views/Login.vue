@@ -4,6 +4,9 @@
     <div class="login-panel">
         <div class="title drag">EasyChat</div>
 
+        <div v-if="showLoading" class="loading-panel">
+            <img src="../assets/img/loading.gif" alt="加载中">
+        </div>
         <div class="login-form">
             <!-- <div class="error-msg">{{ errorMsg }}</div> -->
             <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="0px" @submit.prevent>
@@ -83,7 +86,6 @@
 
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
-import md5 from 'js-md5';
 import { useUserInfoStore } from '../stores/UserInfoStore';
 import { useRouter } from 'vue-router';
 const router=useRouter()
@@ -115,9 +117,6 @@ const changeCheckCode=async()=>{
     localStorage.setItem('checkCodeKey',result.data.checkCodeKey);
 }
 changeCheckCode()
-
-console.log("获取验证码："+checkCodeUrl)
-
 
 
 const rePasswordRule = (rule, value, callback) => {
@@ -154,6 +153,10 @@ const showLoading=ref(false)
 const submit = async() => {
 
    
+   if(isLogin.value)
+   {
+     showLoading.value=true;
+   }
    let result= await proxy.Request({
     url: isLogin.value?proxy.Api.login:proxy.Api.register,
     showLoading: isLogin.value?false:true,
@@ -185,6 +188,19 @@ const submit = async() => {
      //页面跳转
      router.push('/main')
 
+     const screenWidth=window.screen.width
+     const screenHeight=window.screen.height
+
+     window.ipcRenderer.send('openChat',{
+        email: formData.value.email,
+        token: result.data.token,
+        userId: result.data.userId,
+        nickName: result.data.nickName,
+        admin: result.data.admin,
+        screenWidth,
+        screenHeight
+    
+     })
 
    }else{
      proxy.message.success('注册成功')
@@ -193,11 +209,6 @@ const submit = async() => {
 
 
 };
-
-
-
-
-
 
 </script>
 
