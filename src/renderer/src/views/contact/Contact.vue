@@ -30,12 +30,14 @@
         </template>
         <template #right-content>
             <div class="title-panel drag">{{ rightTitle }}</div>
+            <router-view v-slot="{Component}">
+                <component :is="Component" ref="componentRef"></component>
+            </router-view>
         </template>
     </Layout>
 </template>
 
 <script setup>
-import { iconPropType } from 'element-plus/es/utils/index.mjs';
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
 const { proxy } = getCurrentInstance();
 
@@ -101,7 +103,18 @@ const partList = ref([
     }
 ])
 
-const rightTitle = ref("此处是标题");
+const rightTitle = ref(null);
+
+const partJump=(data)=>{
+   if(data.showTitle){
+     rightTitle.value=data.name
+   }else
+   {
+    rightTitle.value=null
+   }
+   router.push(data.path)
+   //TODO消息已读
+}
 
 </script>
 

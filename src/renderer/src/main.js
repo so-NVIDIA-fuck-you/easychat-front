@@ -11,16 +11,18 @@ import message from './utlis/Message'
 import Api from './utlis/Api'
 import * as Pinia from 'pinia'
 import Layout from './components/Layout.vue'
+import WinOp from './components/WinOp.vue'
 
 
 import router from '@/router'
 
-const app=createApp(App)
+const app=createApp(App) 
 app.use(ElementPlus)
 app.use(router)
 app.use(Pinia.createPinia())
 
 app.component("Layout",Layout)
+app.component("WinOp",WinOp)
 
 app.config.globalProperties.Request=Request;
 app.config.globalProperties.message=message;

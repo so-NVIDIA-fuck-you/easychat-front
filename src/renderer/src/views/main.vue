@@ -30,12 +30,15 @@
     </div>
 
   </div>
+
+  <WinOp></WinOp>
 </template>
 
 <script setup>
 import { ref, reactive, getCurrentInstance, nextTick } from 'vue'
 const { proxy }=getCurrentInstance();
 import { useRouter } from 'vue-router';
+import WinOp from '../components/WinOp.vue';
 const router= useRouter();
 
 const menuList=ref([

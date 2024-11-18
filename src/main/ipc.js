@@ -1,6 +1,4 @@
 import { app, shell, BrowserWindow ,ipcMain} from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import store from './store'
 
 const onLoginOrRegister=(callback)=>{
@@ -25,7 +23,14 @@ const onLoginSuccess=(callback)=>{
 
 }
 
+
+const winTitleOp=(callback)=>{
+   ipcMain.on("winTitleOp",(e,data)=>{
+    callback(e,data)
+   })
+}
+
 export{
-    onLoginOrRegister,onLoginSuccess
+    onLoginOrRegister,onLoginSuccess,winTitleOp
 }
 

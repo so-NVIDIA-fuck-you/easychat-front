@@ -1,9 +1,9 @@
-import { app, shell, BrowserWindow ,ipcMain} from 'electron'
+import { app, shell, BrowserWindow ,Menu,Tray} from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 
-import { onLoginOrRegister,onLoginSuccess } from './ipc'
+import { onLoginOrRegister,onLoginSuccess,winTitleOp } from './ipc'
 
 const login_width=300;
 const login_height=470;
@@ -53,6 +53,23 @@ function createWindow() {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+   const tray= new Tray(icon);
+   const contextMenu=[
+    {
+      label:'退出Easychat',click:function(){
+        app.exit();
+      }
+    },
+   ]
+   const menu =Menu.buildFromTemplate(contextMenu);
+   tray.setToolTip('EasyChat');
+   tray.setContextMenu(menu);
+   tray.on("click",()=>{
+    mainWindow.setSkipTaskbar(false);
+    mainWindow.show();
+   })
+
   //监听登录注册 
   onLoginOrRegister((isLogin)=>{
     mainWindow.setResizable(true);
@@ -79,7 +96,51 @@ function createWindow() {
         //TODO管理后台操作
         console.log("我是管理员");
        }
+       contextMenu.unshift({
+        label:"用户："+config.nickName,click:function(){}
+       })
+       tray.setContextMenu(Menu.buildFromTemplate(contextMenu));
   })
+
+
+  winTitleOp((e,{action,data})=>{
+    const webContents=e.sender
+    const win=BrowserWindow.fromWebContents(webContents);
+    switch(action)
+    {
+      case "close":{
+          if(data.closeType==0)
+          {
+            win.close();
+          }else{
+            win.setSkipTaskbar(true);
+            win.hide();
+          }
+          break;
+      }
+      case "minimize":{
+         win.minimize();
+         break;
+      }
+      case "maximize":{
+         win.maximize();
+         break;
+      }
+      case "unmaximize":{
+        win.unmaximize();
+        break;
+      }
+      case "top":{
+        win.setAlwaysOnTop(data.top);
+        break;
+      }
+
+
+    }
+
+
+  })
+
 
 
 
